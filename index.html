@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotiBlog - Tu Portal de Noticias</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        nav {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .categories {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .category-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .category-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .add-article-btn {
+            padding: 0.7rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .add-article-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        main {
+            padding: 2rem 0;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .article-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .article-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .article-content {
+            padding: 1.5rem;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .article-category {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .article-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .article-excerpt {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .tag {
+            background: #f0f0f0;
+            padding: 0.3rem 0.7rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #555;
+        }
+
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .comment-count {
+            color: #667eea;
+            font-size: 0.9rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .tags-input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tags-input-container input {
+            flex: 1;
+        }
+
+        .add-tag-btn {
+            padding: 0.8rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .add-tag-btn:hover {
+            background: #764ba2;
+        }
+
+        .tags-list {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .tag-item {
+            background: #667eea;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-tag {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* Article View */
+        .article-full {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .article-full-header {
+            margin-bottom: 2rem;
+        }
+
+        .article-full-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .article-full-body {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 2rem;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .comments-header {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .comment-form {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .comments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comment {
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 3px solid #667eea;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .comment-date {
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .comment-text {
+            color: #555;
+        }
+
+        .back-btn {
+            display: inline-block;
+            padding: 0.7rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #764ba2;
+            transform: translateX(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .nav-content {
+                flex-direction: column;
+            }
+
+            .article-full-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📰 NotiBlog</h1>
+            <p class="tagline">Tu fuente confiable de noticias e información</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <div class="categories" id="categoriesNav">
+                    <button class="category-btn active" data-category="todas">Todas</button>
+                    <button class="category-btn" data-category="tecnologia">Tecnología</button>
+                    <button class="category-btn" data-category="deportes">Deportes</button>
+                    <button class="category-btn" data-category="entretenimiento">Entretenimiento</button>
+                    <button class="category-btn" data-category="negocios">Negocios</button>
+                    <button class="category-btn" data-category="ciencia">Ciencia</button>
+                </div>
+                <button class="add-article-btn" id="addArticleBtn">+ Nuevo Artículo</button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container" id="mainContent">
+            <div class="articles-grid" id="articlesGrid"></div>
+        </div>
+    </main>
+
+    <!-- Modal para agregar artículo -->
+    <div class="modal" id="addArticleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Crear Nuevo Artículo</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="articleForm">
+                    <div class="form-group">
+                        <label for="articleTitle">Título</label>
+                        <input type="text" id="articleTitle" required placeholder="Ingresa el título del artículo">
+                    </div>
+                    <div class="form-group">
+                        <label for="articleImage">URL de la Imagen</label>
+                        <input type="url" id="articleImage" placeholder="https://ejemplo.com/imagen.jpg (opcional)">
+                        <small style="color: #666; font-size: 0.85rem;">Puedes usar imágenes de Unsplash, Pexels, o cualquier URL pública</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleCategory">Categoría</label>
+                        <select id="articleCategory" required>
+                            <option value="">Selecciona una categoría</option>
+                            <option value="tecnologia">Tecnología</option>
+                            <option value="deportes">Deportes</option>
+                            <option value="entretenimiento">Entretenimiento</option>
+                            <option value="negocios">Negocios</option>
+                            <option value="ciencia">Ciencia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleExcerpt">Resumen</label>
+                        <textarea id="articleExcerpt" required placeholder="Escribe un breve resumen del artículo"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleBody">Contenido Completo</label>
+                        <textarea id="articleBody" required placeholder="Escribe el contenido completo del artículo"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="articleAuthor">Autor</label>
+                        <input type="text" id="articleAuthor" required placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label>Etiquetas</label>
+                        <div class="tags-input-container">
+                            <input type="text" id="tagInput" placeholder="Escribe una etiqueta y presiona Enter">
+                            <button type="button" class="add-tag-btn" id="addTagBtn">+ Agregar</button>
+                        </div>
+                        <div class="tags-list" id="tagsList"></div>
+                    </div>
+                    <button type="submit" class="submit-btn">Publicar Artículo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado de la aplicación
+        let articles = [];
+        let currentFilter = 'todas';
+        let currentArticleId = null;
+        let currentTags = [];
+
+        // Artículos de ejemplo
+        const sampleArticles = [
+            {
+                id: 1,
+                title: 'El futuro de la Inteligencia Artificial en 2026',
+                category: 'tecnologia',
+                excerpt: 'La IA continúa revolucionando industrias con avances sorprendentes en aprendizaje automático y procesamiento del lenguaje natural.',
+                body: 'La inteligencia artificial ha experimentado un crecimiento exponencial en los últimos años. Los modelos de lenguaje avanzados están transformando la forma en que interactuamos con la tecnología, desde asistentes virtuales hasta herramientas de productividad. Las empresas de todo el mundo están invirtiendo miles de millones en investigación y desarrollo de IA, lo que promete cambios aún más dramáticos en el futuro cercano.',
+                author: 'Ana García',
+                date: new Date('2026-02-10'),
+                image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
+                tags: ['IA', 'Tecnología', 'Innovación'],
+                comments: [
+                    { author: 'Carlos M.', text: 'Excelente artículo, muy informativo!', date: new Date('2026-02-10') }
+                ]
+            },
+            {
+                id: 2,
+                title: 'Mundial de Fútbol 2026: Todo lo que necesitas saber',
+                category: 'deportes',
+                excerpt: 'Se acerca el Mundial y las expectativas están por las nubes. Conoce las sedes, equipos favoritos y las novedades del torneo.',
+                body: 'El Mundial de Fútbol 2026 será histórico por ser el primero en contar con 48 equipos participantes. Estados Unidos, México y Canadá serán los anfitriones de este magno evento deportivo. Los estadios están siendo renovados y la infraestructura mejorada para recibir a millones de aficionados de todo el mundo.',
+                author: 'Roberto Pérez',
+                date: new Date('2026-02-09'),
+                image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&q=80',
+                tags: ['Fútbol', 'Mundial', 'Deportes'],
+                comments: []
+            },
+            {
+                id: 3,
+                title: 'Nueva serie rompe récords de audiencia',
+                category: 'entretenimiento',
+                excerpt: 'La última producción de la plataforma de streaming ha cautivado a millones de espectadores en su primera semana.',
+                body: 'La nueva serie de ciencia ficción ha superado todas las expectativas, convirtiéndose en el estreno más visto de la historia de la plataforma. Con un presupuesto millonario y un elenco estelar, la producción ha logrado captar la atención del público global con su historia envolvente y efectos visuales de última generación.',
+                author: 'Laura Martínez',
+                date: new Date('2026-02-08'),
+                image: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=800&q=80',
+                tags: ['Series', 'Streaming', 'Televisión'],
+                comments: []
+            },
+            {
+                id: 4,
+                title: 'Descubrimiento científico podría cambiar la medicina',
+                category: 'ciencia',
+                excerpt: 'Investigadores logran un avance significativo en el tratamiento de enfermedades genéticas raras.',
+                body: 'Un equipo internacional de científicos ha desarrollado una nueva técnica de edición genética que promete revolucionar el tratamiento de enfermedades hereditarias. Los resultados preliminares en ensayos clínicos han sido extremadamente prometedores, mostrando una eficacia del 85% sin efectos secundarios significativos.',
+                author: 'Dr. Miguel Sánchez',
+                date: new Date('2026-02-07'),
+                image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&q=80',
+                tags: ['Ciencia', 'Medicina', 'Genética'],
+                comments: []
+            }
+        ];
+
+        // Inicializar aplicación
+        function init() {
+            articles = localStorage.getItem('articles') 
+                ? JSON.parse(localStorage.getItem('articles')) 
+                : sampleArticles;
+            
+            renderArticles();
+            setupEventListeners();
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            document.getElementById('addArticleBtn').addEventListener('click', openModal);
+            document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+            document.getElementById('articleForm').addEventListener('submit', handleSubmitArticle);
+            document.getElementById('addTagBtn').addEventListener('click', addTag);
+            document.getElementById('tagInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTag();
+                }
+            });
+
+            // Filtros de categoría
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.category;
+                    renderArticles();
+                });
+            });
+
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('addArticleModal').addEventListener('click', (e) => {
+                if (e.target.id === 'addArticleModal') {
+                    closeModal();
+                }
+            });
+        }
+
+        // Renderizar artículos
+        function renderArticles() {
+            const grid = document.getElementById('articlesGrid');
+            const filteredArticles = currentFilter === 'todas' 
+                ? articles 
+                : articles.filter(a => a.category === currentFilter);
+
+            grid.innerHTML = filteredArticles.map(article => `
+                <div class="article-card" onclick="viewArticle(${article.id})">
+                    <img src="${article.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="${article.title}" class="article-image">
+                    <div class="article-content">
+                        <div class="article-meta">
+                            <span class="article-category">${article.category.toUpperCase()}</span>
+                            <span>${formatDate(article.date)}</span>
+                        </div>
+                        <h2 class="article-title">${article.title}</h2>
+                        <p class="article-excerpt">${article.excerpt}</p>
+                        <div class="article-tags">
+                            ${article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                        </div>
+                        <div class="article-footer">
+                            <span class="comment-count">💬 ${article.comments.length} comentarios</span>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <span>Por ${article.author}</span>
+                                <button onclick="event.stopPropagation(); deleteArticle(${article.id})" style="background: #ff4757; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Ver artículo completo
+        function viewArticle(id) {
+            currentArticleId = id;
+            const article = articles.find(a => a.id === id);
+            const mainContent = document.getElementById('mainContent');
+
+            mainContent.innerHTML = `
+                <a href="#" class="back-btn" onclick="event.preventDefault(); backToHome()">← Volver al inicio</a>
+                <div class="article-full">
+                    <div class="article-full-header">
+                        <img src="${article.image || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}" alt="${article.title}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 10px; margin-bottom: 2rem;">
+                        <div class="article-meta" style="margin-bottom: 1rem;">
+                            <span class="article-category">${article.category.toUpperCase()}</span>
+                            <span>${formatDate(article.date)}</span>
+                        </div>
+                        <h1 class="article-full-title">${article.title}</h1>
+                        <div class="article-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Por ${article.author}</span>
+                            <button onclick="deleteArticle(${article.id})" style="background: #ff4757; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold;">🗑️ Eliminar Artículo</button>
+                        </div>
+                        <div class="article-tags" style="margin-top: 1rem;">
+                            ${article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="article-full-body">
+                        ${article.body}
+                    </div>
+                </div>
+
+                <div class="comments-section">
+                    <h3 class="comments-header">💬 Comentarios (${article.comments.length})</h3>
+                    
+                    <div class="comment-form">
+                        <h4 style="margin-bottom: 1rem;">Deja tu comentario</h4>
+                        <form onsubmit="event.preventDefault(); addComment()">
+                            <div class="form-group">
+                                <input type="text" id="commentAuthor" placeholder="Tu nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <textarea id="commentText" placeholder="Escribe tu comentario..." required></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn">Publicar Comentario</button>
+                        </form>
+                    </div>
+
+                    <div class="comments-list">
+                        ${article.comments.length > 0 
+                            ? article.comments.map((comment, index) => `
+                                <div class="comment">
+                                    <div class="comment-header">
+                                        <span class="comment-author">${comment.author}</span>
+                                        <span class="comment-date">${formatDate(comment.date)}</span>
+                                    </div>
+                                    <p class="comment-text">${comment.text}</p>
+                                    <button onclick="deleteComment(${article.id}, ${index})" style="background: transparent; color: #ff4757; border: 1px solid #ff4757; padding: 0.4rem 0.8rem; border-radius: 5px; cursor: pointer; font-size: 0.85rem; margin-top: 0.5rem;">Eliminar comentario</button>
+                                </div>
+                            `).join('')
+                            : '<p style="color: #999; text-align: center; padding: 2rem;">No hay comentarios aún. ¡Sé el primero en comentar!</p>'
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        // Volver al inicio
+        function backToHome() {
+            currentArticleId = null;
+            document.getElementById('mainContent').innerHTML = '<div class="articles-grid" id="articlesGrid"></div>';
+            renderArticles();
+        }
+
+        // Eliminar artículo
+        function deleteArticle(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este artículo?')) {
+                articles = articles.filter(a => a.id !== id);
+                saveArticles();
+                backToHome();
+            }
+        }
+
+        // Eliminar comentario
+        function deleteComment(articleId, commentIndex) {
+            if (confirm('¿Estás seguro de que deseas eliminar este comentario?')) {
+                const article = articles.find(a => a.id === articleId);
+                article.comments.splice(commentIndex, 1);
+                saveArticles();
+                viewArticle(articleId);
+            }
+        }
+
+        // Agregar comentario
+        function addComment() {
+            const author = document.getElementById('commentAuthor').value;
+            const text = document.getElementById('commentText').value;
+
+            const article = articles.find(a => a.id === currentArticleId);
+            article.comments.push({
+                author,
+                text,
+                date: new Date()
+            });
+
+            saveArticles();
+            viewArticle(currentArticleId);
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('addArticleModal').classList.add('active');
+            currentTags = [];
+            document.getElementById('tagsList').innerHTML = '';
+        }
+
+        function closeModal() {
+            document.getElementById('addArticleModal').classList.remove('active');
+            document.getElementById('articleForm').reset();
+            currentTags = [];
+            document.getElementById('tagsList').innerHTML = '';
+        }
+
+        // Agregar etiqueta
+        function addTag() {
+            const input = document.getElementById('tagInput');
+            const tag = input.value.trim();
+
+            if (tag && !currentTags.includes(tag)) {
+                currentTags.push(tag);
+                renderTags();
+                input.value = '';
+            }
+        }
+
+        // Renderizar etiquetas
+        function renderTags() {
+            const tagsList = document.getElementById('tagsList');
+            tagsList.innerHTML = currentTags.map(tag => `
+                <div class="tag-item">
+                    <span>${tag}</span>
+                    <button class="remove-tag" onclick="removeTag('${tag}')">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        // Remover etiqueta
+        function removeTag(tag) {
+            currentTags = currentTags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        // Enviar artículo
+        function handleSubmitArticle(e) {
+            e.preventDefault();
+
+            const newArticle = {
+                id: Date.now(),
+                title: document.getElementById('articleTitle').value,
+                category: document.getElementById('articleCategory').value,
+                excerpt: document.getElementById('articleExcerpt').value,
+                body: document.getElementById('articleBody').value,
+                author: document.getElementById('articleAuthor').value,
+                image: document.getElementById('articleImage').value || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80',
+                date: new Date(),
+                tags: [...currentTags],
+                comments: []
+            };
+
+            articles.unshift(newArticle);
+            saveArticles();
+            closeModal();
+            renderArticles();
+        }
+
+        // Guardar en localStorage
+        function saveArticles() {
+            localStorage.setItem('articles', JSON.stringify(articles));
+        }
+
+        // Formatear fecha
+        function formatDate(date) {
+            const d = new Date(date);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return d.toLocaleDateString('es-ES', options);
+        }
+
+        // Iniciar aplicación
+        init();
+    </script>
+</body>
+</html>
